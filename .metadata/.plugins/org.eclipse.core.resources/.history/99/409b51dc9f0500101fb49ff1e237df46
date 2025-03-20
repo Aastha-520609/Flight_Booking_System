@@ -1,5 +1,0 @@
-package com.flightsearch.search_service.Repository;
-
-public interface SearchRepository {
-
-}
