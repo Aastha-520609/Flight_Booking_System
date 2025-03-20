@@ -1,0 +1,5 @@
+package com.flightsearch.search_service.Controller;
+
+public class SearchController {
+
+}

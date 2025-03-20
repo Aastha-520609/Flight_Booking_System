@@ -1,0 +1,41 @@
+package com.flightsearch.search_service.Controller;
+
+import com.flightsearch.search_service.Entity.Flight;
+import com.flightsearch.search_service.Service.SearchService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@RestController
+@RequestMapping("/flights")
+public class SearchController {
+
+    private final SearchService searchService;
+
+    public SearchController(SearchService searchService) {
+        this.searchService = searchService;
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Flight>> findFlightsBySourceAndDestination(
+            @RequestParam String source,
+            @RequestParam String destination,
+            @RequestParam LocalDate flightDate) {
+        
+        List<Flight> flights = searchService.searchFlights(source, destination, flightDate);
+        
+        return flights.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(flights);
+    }
+
+    @GetMapping("/{flightNumber}")
+    public ResponseEntity<Flight> findFlightByFlightNumberAndDate(
+            @PathVariable String flightNumber,
+            @RequestParam LocalDate flightDate) {
+        
+        Flight flight = searchService.searchFlightByNumber(flightNumber, flightDate);
+        
+        return (flight != null) ? ResponseEntity.ok(flight) : ResponseEntity.notFound().build();
+    }
+}

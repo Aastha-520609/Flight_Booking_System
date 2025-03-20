@@ -1,0 +1,15 @@
+package com.flightsearch.search_service.Repository;
+import com.flightsearch.search_service.Entity.Flight;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface SearchRepository extends JpaRepository<Flight, Integer> {
+    
+    List<Flight> findBySourceAndDestination(String source, String destination);
+    
+    Flight findByFlightNumber(String flightNumber);
+    
+    boolean existsByFlightIdAndSeatsAvailableGreaterThan(Integer flightId, int minSeats);
+}
