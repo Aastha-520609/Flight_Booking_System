@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/flights")
@@ -48,10 +49,21 @@ public class FlightController {
         return flightService.addFlight(flight);
     }
     
-    //update
+    //fullUpdate
     @PutMapping("/update/{id}")
     public Flight updateFlight(@PathVariable Integer id, @RequestBody Flight updatedFlight) {
         return flightService.updateFlight(id, updatedFlight);
+    }
+    
+    //partialUpdate
+    @PatchMapping("/update/{id}")
+    public ResponseEntity<Flight> updateFlightFields(
+            @PathVariable Integer id,
+            @RequestBody Map<String, Object> updates) {
+        
+        Flight updatedFlight = flightService.updateFlightFields(id, updates);
+        
+        return (updatedFlight != null) ? ResponseEntity.ok(updatedFlight) : ResponseEntity.notFound().build();
     }
     
     //delete
