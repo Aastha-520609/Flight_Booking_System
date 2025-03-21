@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.flightsearch</groupId>
-	<artifactId>search-service</artifactId>
+	<artifactId>flight-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>search-service</name>
 	<description>Flight search service for Flight booking system</description>
