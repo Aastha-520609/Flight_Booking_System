@@ -1,0 +1,63 @@
+package com.flightservice.flight_service.Controller;
+
+import com.flightservice.flight_service.Entity.Flight;
+import com.flightservice.flight_service.Service.FlightService;
+
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@RestController
+@RequestMapping("/flights")
+public class FlightController {
+
+    private final FlightService flightService;
+
+    public FlightController(FlightService flightService) {
+        this.flightService = flightService;
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Flight>> findFlightsBySourceAndDestination(
+            @RequestParam String source,
+            @RequestParam String destination,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate flightDate) {
+        
+        List<Flight> flights = flightService.searchFlights(source, destination, flightDate);
+        
+        return flights.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(flights);
+    }
+
+    @GetMapping("/{flightNumber}")
+    public ResponseEntity<Flight> findFlightByFlightNumberAndDate(
+            @PathVariable String flightNumber,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate flightDate) {
+        
+        Flight flight = flightService.searchFlightByNumber(flightNumber, flightDate);
+        
+        return (flight != null) ? ResponseEntity.ok(flight) : ResponseEntity.notFound().build();
+    }
+    
+    
+    //add
+    @PostMapping("/add")
+    public Flight addFlight(@RequestBody Flight flight) {
+        return flightService.addFlight(flight);
+    }
+    
+    //update
+    @PutMapping("/update/{id}")
+    public Flight updateFlight(@PathVariable Integer id, @RequestBody Flight updatedFlight) {
+        return flightService.updateFlight(id, updatedFlight);
+    }
+    
+    //delete
+    @DeleteMapping("/delete/{id}")
+    public String deleteFlight(@PathVariable Integer id) {
+        boolean isDeleted = flightService.deleteFlight(id);
+        return isDeleted ? "Flight deleted successfully." : "Flight not found.";
+    }
+}
