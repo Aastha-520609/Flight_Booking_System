@@ -1,5 +1,9 @@
 package com.userservice.user_service.Entity;
 
+import java.util.Collection;
+
+import org.springframework.security.core.GrantedAuthority;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,4 +23,5 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
 }

@@ -1,5 +1,6 @@
 package com.userservice.user_service.Security;
 
+import com.userservice.user_service.Service.JwtService;
 import com.userservice.user_service.Service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,39 +19,46 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import java.util.List;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
-
-    private final JwtAuthFilter jwtAuthFilter;
+   
+	private final JwtService jwtService;
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, UserService userService) {
-        this.jwtAuthFilter = jwtAuthFilter;
+    public SecurityConfig(JwtService jwtService, UserService userService, PasswordEncoder passwordEncoder) {
+        this.jwtService = jwtService;
         this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+    }
+    
+    @Bean
+    public JwtAuthFilter jwtAuthFilter() {
+        return new JwtAuthFilter(jwtService, userService);
     }
 
     @Bean
-    public AuthenticationManager authenticationManager() {
+    public AuthenticationManager authenticationManager(UserDetailsService userDetailsService) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService((UserDetailsService) userService);
-        provider.setPasswordEncoder(passwordEncoder());
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
         return new ProviderManager(List.of(provider));
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("Security filter chain applied!");
+
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                .requestMatchers("/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
         return http.build();
     }
+
 }
