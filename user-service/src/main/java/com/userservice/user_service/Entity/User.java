@@ -24,4 +24,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

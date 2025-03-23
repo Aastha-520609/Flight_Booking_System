@@ -25,7 +25,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User registerUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
@@ -39,10 +38,11 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(), 
-                user.getPassword(), 
-                new ArrayList<>()
-        );
+        return org.springframework.security.core.userdetails.User
+                .withUsername(user.getUsername())
+                .password(user.getPassword())
+                .authorities(new ArrayList<>())
+                .build();
     }
+
 }
