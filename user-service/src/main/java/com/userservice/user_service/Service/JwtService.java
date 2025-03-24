@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.userservice.user_service.Entity.User;
+import com.userservice.user_service.Entity.Role;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -37,14 +38,15 @@ public class JwtService {
 		}
 	}
 
-	public String generateToken(String username) {
+	public String generateToken(User user) {
 		
 		Map<String, Object> claims = new HashMap<>();
+		claims.put("role", user.getRole().name());
 		
 		return Jwts.builder()
 				.claims()
 				.add(claims)
-				.subject(username)
+				.subject(user.getUsername())
 				.issuedAt(new Date(System.currentTimeMillis()))
 				.expiration(new Date(System.currentTimeMillis() + 60 * 60 * 30))
 				.and()

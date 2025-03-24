@@ -3,6 +3,7 @@ package com.userservice.user_service.Controller;
 import com.userservice.user_service.DTO.AuthRequest;
 import com.userservice.user_service.DTO.AuthResponse;
 import com.userservice.user_service.DTO.UserDTO;
+import com.userservice.user_service.Entity.Role;
 import com.userservice.user_service.Entity.User;
 import com.userservice.user_service.Service.JwtService;
 import com.userservice.user_service.Service.UserService;
@@ -14,13 +15,13 @@ import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/auth")
@@ -37,7 +38,7 @@ public class AuthController {
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
     }
-    
+
     @GetMapping("/test")
     public ResponseEntity<String> test() {
         return ResponseEntity.ok("API is working!");
@@ -52,6 +53,7 @@ public class AuthController {
             user.setUsername(userDTO.getUsername());
             user.setEmail(userDTO.getEmail());
             user.setPassword(encodedPassword);
+            user.setRole(userDTO.getRole() != null ? userDTO.getRole() : Role.USER);
 
             User registeredUser = userService.registerUser(user);
             return ResponseEntity.ok("User registered successfully with username: " + registeredUser.getUsername());
@@ -63,35 +65,35 @@ public class AuthController {
                     .body("Error occurred: " + e.getMessage());
         }
     }
-    
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> loginUser(@RequestBody AuthRequest authRequest) {
         try {
             Optional<User> optionalUser = userService.findByUsername(authRequest.getUsername());
 
             if (optionalUser.isEmpty()) {
-                return ResponseEntity.status(401).body(new AuthResponse("Invalid username or password"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse("Authentication failed", null));
             }
 
             User user = optionalUser.get();
 
             if (!passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
-                return ResponseEntity.status(401).body(new AuthResponse("Invalid username or password"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse("Authentication failed", null));
             }
 
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
             );
+            
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String token = jwtService.generateToken(authentication.getName());
+            String token = jwtService.generateToken(user);
 
-            return ResponseEntity.ok(new AuthResponse(token));
+            return ResponseEntity.ok(new AuthResponse(token, user.getRole()));
 
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(401).body(new AuthResponse("Invalid username or password"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(new AuthResponse("Error: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AuthResponse("Error: " + e.getMessage(), null));
         }
     }
 }

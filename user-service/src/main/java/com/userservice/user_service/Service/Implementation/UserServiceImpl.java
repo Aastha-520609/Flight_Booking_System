@@ -1,5 +1,6 @@
 package com.userservice.user_service.Service.Implementation;
 
+import com.userservice.user_service.Entity.Role;
 import com.userservice.user_service.Entity.User;
 import com.userservice.user_service.Repository.UserRepository;
 import com.userservice.user_service.Service.UserService;
@@ -25,6 +26,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User registerUser(User user) {
+    	if (user.getRole() == null) {
+            user.setRole(Role.USER);
+        }
         return userRepository.save(user);
     }
 
@@ -41,7 +45,7 @@ public class UserServiceImpl implements UserService {
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
                 .password(user.getPassword())
-                .authorities(new ArrayList<>())
+                .authorities("ROLE_" + user.getRole().name())
                 .build();
     }
 

@@ -7,6 +7,7 @@ import com.userservice.user_service.Service.UserService;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ public class UserController {
         this.userService = userService;
     }
 
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @GetMapping("/profile")
     public ResponseEntity<UserDTO> getUserProfile(@AuthenticationPrincipal UserDetails userDetails) {
         Optional<User> userOptional = userService.findByUsername(userDetails.getUsername());
@@ -32,8 +34,9 @@ public class UserController {
         User user = userOptional.get();
         UserDTO userDTO = new UserDTO();
         userDTO.setUsername(user.getUsername());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setRole(user.getRole());
+
         return ResponseEntity.ok(userDTO);
     }
-
 }
-
