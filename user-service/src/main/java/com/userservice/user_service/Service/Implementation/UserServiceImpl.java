@@ -48,5 +48,12 @@ public class UserServiceImpl implements UserService {
                 .authorities("ROLE_" + user.getRole().name())
                 .build();
     }
+    
+    @Override
+    public Role getUserRole(String username) {
+        return userRepository.findByUsername(username)
+                .map(User::getRole)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    }
 
 }

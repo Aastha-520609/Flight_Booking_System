@@ -1,6 +1,7 @@
 package com.flightservice.flight_service.Controller;
 
 import com.flightservice.flight_service.Entity.Flight;
+import com.flightservice.flight_service.Feign.UserServiceClient;
 import com.flightservice.flight_service.Service.FlightService;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,9 +17,11 @@ import java.util.Map;
 public class FlightController {
 
     private final FlightService flightService;
+    private final UserServiceClient userServiceClient;
 
-    public FlightController(FlightService flightService) {
+    public FlightController(FlightService flightService, UserServiceClient userServiceClient) {
         this.flightService = flightService;
+        this.userServiceClient = userServiceClient;
     }
 
     @GetMapping("/search")
@@ -71,5 +74,10 @@ public class FlightController {
     public String deleteFlight(@PathVariable Integer id) {
         boolean isDeleted = flightService.deleteFlight(id);
         return isDeleted ? "Flight deleted successfully." : "Flight not found.";
+    }
+    
+    @GetMapping("/check-user")
+    public ResponseEntity<String> checkUser(@RequestHeader("Authorization") String token) {
+        return userServiceClient.validateToken(token);
     }
 }
