@@ -6,6 +6,7 @@ import com.flightservice.flight_service.Entity.Flight;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FlightRepository extends JpaRepository<Flight, Integer> {
@@ -13,4 +14,6 @@ public interface FlightRepository extends JpaRepository<Flight, Integer> {
 	List<Flight> findBySourceAndDestinationAndFlightDate(String source, String destination, LocalDate flightDate);
     
 	Flight findByFlightNumberAndFlightDate(String flightNumber, LocalDate flightDate);
+	
+	Optional<Flight> findById(Long id);
 }

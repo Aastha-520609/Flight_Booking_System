@@ -45,6 +45,12 @@ public class FlightController {
         return (flight != null) ? ResponseEntity.ok(flight) : ResponseEntity.notFound().build();
     }
     
+    @GetMapping("/id/{id}")
+    public ResponseEntity<Flight> findFlightById(@PathVariable Long id) {
+        Flight flight = flightService.findFlightById(id);
+        return (flight != null) ? ResponseEntity.ok(flight) : ResponseEntity.notFound().build();
+    }
+    
     
     //add
     @PostMapping("/add")

@@ -32,6 +32,10 @@ public class FlightService {
         return flightRepository.findByFlightNumberAndFlightDate(flightNumber, flightDate);
     }
     
+    public Flight findFlightById(Long id) {
+        return flightRepository.findById(id).orElse(null);
+    }
+    
     //add flight by admin
     public Flight addFlight(Flight flight) {
         return flightRepository.save(flight);
