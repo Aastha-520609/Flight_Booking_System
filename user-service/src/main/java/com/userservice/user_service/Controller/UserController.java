@@ -48,7 +48,7 @@ public class UserController {
     @GetMapping("/validate")
     public ResponseEntity<String> validateToken(@RequestHeader("Authorization") String token) {
         try {
-            String username = jwtService.extractUserName(token.substring(7)); // Remove "Bearer "
+            String username = jwtService.extractUserName(token.substring(7));
             Role role = userService.getUserRole(username);
             return ResponseEntity.ok(role.name());
         } catch (Exception e) {

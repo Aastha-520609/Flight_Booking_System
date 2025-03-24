@@ -52,11 +52,12 @@ public class SecurityConfig {
         System.out.println("Security filter chain applied!");
 
         http
-            .csrf(csrf -> csrf.disable()) 
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/**").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN") 
-                .anyRequest().authenticated()
+	            .csrf(csrf -> csrf.disable()) 
+	            .authorizeHttpRequests(auth -> auth
+		            .requestMatchers("/auth/**").permitAll()
+		            .requestMatchers("/flights/search", "/flights/{flightNumber}").hasAnyRole("USER", "ADMIN")
+		            .requestMatchers("/flights/**").hasRole("ADMIN")
+		            .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
