@@ -55,8 +55,9 @@ public class SecurityConfig {
 	            .csrf(csrf -> csrf.disable()) 
 	            .authorizeHttpRequests(auth -> auth
 		            .requestMatchers("/auth/**").permitAll()
-		            .requestMatchers("/flights/search", "/flights/{flightNumber}").hasAnyRole("USER", "ADMIN")
-		            .requestMatchers("/flights/**").hasRole("ADMIN")
+		            .requestMatchers("/flights/search", "/flights/{flightNumber}").hasAnyAuthority("USER", "ADMIN")
+		            .requestMatchers("/flights/**").hasAuthority("ADMIN")
+		            .requestMatchers("/bookings/**").permitAll()
 		            .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

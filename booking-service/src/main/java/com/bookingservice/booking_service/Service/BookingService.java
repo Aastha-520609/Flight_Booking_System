@@ -1,7 +1,10 @@
 package com.bookingservice.booking_service.Service;
 
 import com.bookingservice.booking_service.DTO.BookingRequest;
+import com.bookingservice.booking_service.DTO.FlightDTO;
 import com.bookingservice.booking_service.Entity.Booking;
+import com.bookingservice.booking_service.Feign.FlightServiceClient;
+import com.bookingservice.booking_service.Feign.UserServiceClient;
 import com.bookingservice.booking_service.Repository.BookingRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,20 +17,43 @@ import java.util.Optional;
 public class BookingService {
 
     private final BookingRepository bookingRepository;
+    private final UserServiceClient userServiceClient;
+    private final FlightServiceClient flightServiceClient;
 
-    public BookingService(BookingRepository bookingRepository) {
+    public BookingService(BookingRepository bookingRepository, UserServiceClient userServiceClient, FlightServiceClient flightServiceClient) {
         this.bookingRepository = bookingRepository;
+        this.userServiceClient = userServiceClient;
+        this.flightServiceClient = flightServiceClient;
     }
 
     @Transactional
-    public Booking createBooking(String username, String source, String destination, String date, BookingRequest bookingRequest) {
+    public Booking createBooking(String username, BookingRequest bookingRequest) {
+    	Long userId = userServiceClient.getUserIdByUsername(username);
+    	Long flightId = bookingRequest.getFlightId();
+    	
+    	 FlightDTO flight = flightServiceClient.getFlightById(flightId);
+    	    if (flight == null) {
+    	        throw new RuntimeException("Flight not found.");
+    	    }
+
+    	    boolean isAvailable = flightServiceClient.checkAvailability(flightId, bookingRequest.getNumSeats());
+    	    if (!isAvailable) {
+    	        throw new RuntimeException("No available seats.");
+    	    }
+    	    
+    	
         Booking booking = new Booking();
+        booking.setUserId(userId);
+        booking.setFlightId(flightId);
         booking.setPassengerName(bookingRequest.getName());
         booking.setPassengerEmail(bookingRequest.getEmail());
         booking.setPassengerPhone(bookingRequest.getPhone());
         booking.setSeatNumber("TBD"); // Seat assignment logic needed
-        booking.setTotalPrice(BigDecimal.ZERO); // Pricing logic needed
-        booking.setBookingDate(LocalDate.parse(date));
+        booking.setTotalPrice(flight.getPrice().multiply(BigDecimal.valueOf(bookingRequest.getNumSeats()))); 
+        booking.setBookingDate(LocalDate.now());
+        
+        flightServiceClient.reduceSeats(flightId, bookingRequest.getNumSeats());
+        
         return bookingRepository.save(booking);
     }
 

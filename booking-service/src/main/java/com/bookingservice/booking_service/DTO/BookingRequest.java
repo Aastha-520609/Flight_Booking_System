@@ -18,4 +18,5 @@ public class BookingRequest {
     private String email;
     private String phone;
     private int numSeats;
+    private Long flightId; 
 }

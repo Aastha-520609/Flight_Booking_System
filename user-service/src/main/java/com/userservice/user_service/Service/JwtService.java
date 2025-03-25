@@ -60,7 +60,12 @@ public class JwtService {
 	}
 
 	public String extractUserName(String token) {
-		return extractClaim(token, Claims::getSubject);
+		try {
+            return extractClaim(token, Claims::getSubject);
+        } catch (Exception e) {
+            System.out.println("Error extracting username from token: " + e.getMessage());
+            return null;
+        }
 	}
 	
 	private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
