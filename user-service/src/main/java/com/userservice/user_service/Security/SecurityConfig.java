@@ -1,69 +1,61 @@
 package com.userservice.user_service.Security;
 
-import com.userservice.user_service.Service.JwtService;
-import com.userservice.user_service.Service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import java.util.List;
+import com.userservice.user_service.Service.UserService;
 
 @Configuration
-@EnableWebSecurity
 public class SecurityConfig {
-   
-	private final JwtService jwtService;
+    
     private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
 
-    public SecurityConfig(JwtService jwtService, UserService userService, PasswordEncoder passwordEncoder) {
-        this.jwtService = jwtService;
+    public SecurityConfig(UserService userService) {
         this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
     
     @Bean
-    public JwtAuthFilter jwtAuthFilter() {
-        return new JwtAuthFilter(jwtService, userService);
+    public UserDetailsService userDetailsService() {
+        return userService::loadUserByUsername;
+    }
+    
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService());
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
     @Bean
     public AuthenticationManager authenticationManager() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userService);
-        provider.setPasswordEncoder(passwordEncoder);
-        return new ProviderManager(List.of(provider));
+        return new ProviderManager(authenticationProvider());
     }
-
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("Security filter chain applied!");
-
-        http
-	            .csrf(csrf -> csrf.disable()) 
-	            .authorizeHttpRequests(auth -> auth
-		            .requestMatchers("/auth/**").permitAll()
-		            .requestMatchers("/flights/search", "/flights/{flightNumber}").hasAnyAuthority("USER", "ADMIN")
-		            .requestMatchers("/flights/**").hasAuthority("ADMIN")
-		            .requestMatchers("/bookings/**").permitAll()
-		            .anyRequest().authenticated()
-            )
+        return http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/auth/register", "/auth/login").permitAll() // Public access for login & registration
+                .requestMatchers("/users/**").authenticated() // Requires authentication
+                .anyRequest().authenticated()) // Secure all other endpoints
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+            .authenticationProvider(authenticationProvider())
+            .build();
     }
-
 }

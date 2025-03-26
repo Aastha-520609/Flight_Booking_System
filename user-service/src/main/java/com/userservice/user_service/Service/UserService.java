@@ -1,15 +1,35 @@
 package com.userservice.user_service.Service;
 
-import com.userservice.user_service.Entity.Role;
 import com.userservice.user_service.Entity.User;
-import java.util.Optional;
-
+import com.userservice.user_service.Repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
-public interface UserService extends UserDetailsService{
-    User registerUser(User user);
-    Optional<User> findByUsername(String username);
-    Role getUserRole(String username); 
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class UserService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    // ✅ Fetch User by Username
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    // ✅ Fetch All Users
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return (UserDetails) userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+    }
 }

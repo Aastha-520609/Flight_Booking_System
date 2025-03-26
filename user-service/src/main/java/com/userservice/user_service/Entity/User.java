@@ -1,8 +1,11 @@
 package com.userservice.user_service.Entity;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,7 +13,7 @@ import lombok.*;
 @Entity
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 @Table(name = "users")
-public class User {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,12 +27,12 @@ public class User {
     @Column(nullable = false)
     private String password;
     
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    private String role;
+    
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(() -> "ROLE_" + role); // Return role as authority
+    }
 
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 }
