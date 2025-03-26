@@ -37,18 +37,6 @@ public class AuthService {
 
         return new AuthResponse(token, savedUser.getRole());
     }
-
-//    public AuthResponse loginUser(AuthRequest authRequest) {
-//        authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-//        );
-//
-//        User user = userRepository.findByUsername(authRequest.getUsername())
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-//
-//        String token = jwtUtil.generateToken(user);
-//        return new AuthResponse(token, user.getRole());
-//    }
     
     public AuthResponse login(AuthRequest request) {
         log.info("Login attempt for username: {}", request.getUsername());

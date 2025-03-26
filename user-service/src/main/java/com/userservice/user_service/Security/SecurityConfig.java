@@ -51,9 +51,9 @@ public class SecurityConfig {
         return http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/register", "/auth/login").permitAll() // Public access for login & registration
-                .requestMatchers("/users/**").authenticated() // Requires authentication
-                .anyRequest().authenticated()) // Secure all other endpoints
+                .requestMatchers("/auth/register", "/auth/login").permitAll() 
+                .requestMatchers("/users/**").authenticated()
+                .anyRequest().authenticated()) 
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
             .build();

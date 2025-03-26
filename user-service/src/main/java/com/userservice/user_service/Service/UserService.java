@@ -16,13 +16,12 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    // ✅ Fetch User by Username
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    // ✅ Fetch All Users
+
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
