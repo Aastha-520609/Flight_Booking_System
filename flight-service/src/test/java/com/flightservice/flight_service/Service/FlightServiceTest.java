@@ -107,7 +107,7 @@ class FlightServiceTest {
         updates.put("airlineName", "SpiceJet");
         updates.put("price", "5500");
 
-        Flight result = flightService.updateFlightFields(1, updates);
+        Flight result = flightService.updateFlightFields((long) 1, updates);
         assertNotNull(result);
         assertEquals("SpiceJet", result.getAirlineName());
         assertEquals(new BigDecimal("5500"), result.getPrice());

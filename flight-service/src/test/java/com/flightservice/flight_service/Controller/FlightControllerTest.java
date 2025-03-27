@@ -107,7 +107,7 @@ class FlightControllerTest {
         flight.setAirlineName("SpiceJet");
         flight.setPrice(new BigDecimal("5500"));
 
-        when(flightService.updateFlightFields(eq(1), anyMap())).thenReturn(flight);
+        when(flightService.updateFlightFields((long) eq(1), anyMap())).thenReturn(flight);
 
         mockMvc.perform(patch("/flights/update/1")
                         .contentType(MediaType.APPLICATION_JSON)
