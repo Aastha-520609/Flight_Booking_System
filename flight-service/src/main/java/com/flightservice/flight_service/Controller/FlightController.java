@@ -25,65 +25,95 @@ public class FlightController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Flight>> findFlightsBySourceAndDestination(
-            @RequestParam String source,
-            @RequestParam String destination,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate flightDate) {
+    public ResponseEntity<?> findFlightsBySourceAndDestination(
+            @RequestParam(required = true) String source,
+            @RequestParam(required = true) String destination,
+            @RequestParam(required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate flightDate) {
+    	
+    	if (flightDate.isBefore(LocalDate.now())) {
+            return ResponseEntity.status(404).body("Past date flights are not available.");
+        }
         
         List<Flight> flights = flightService.searchFlights(source, destination, flightDate);
         
-        return flights.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(flights);
+        return flights.isEmpty() 
+                ? ResponseEntity.status(404).body("No flights found for the given source, destination, and date.") 
+                : ResponseEntity.ok(flights);
+    }
+    
+    //added inorder to get flight in booking
+    @GetMapping("/id/{id}")
+    public ResponseEntity<?> findFlightById(@PathVariable Long id) {
+        Flight flight = flightService.findFlightById(id);
+        return (flight != null) 
+            ? ResponseEntity.ok(flight) 
+            : ResponseEntity.status(404).body("Flight with ID " + id + " not found.");
     }
 
     @GetMapping("/{flightNumber}")
-    public ResponseEntity<Flight> findFlightByFlightNumberAndDate(
+    public ResponseEntity<?> findFlightByFlightNumberAndDate(
             @PathVariable String flightNumber,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate flightDate) {
+            @RequestParam(required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate flightDate) {
         
         Flight flight = flightService.searchFlightByNumber(flightNumber, flightDate);
         
-        return (flight != null) ? ResponseEntity.ok(flight) : ResponseEntity.notFound().build();
+        return (flight != null) 
+            ? ResponseEntity.ok(flight) 
+            : ResponseEntity.status(404).body("No flight found for flight number: " + flightNumber + " on date: " + flightDate);
     }
     
-    @GetMapping("/id/{id}")
-    public ResponseEntity<Flight> findFlightById(@PathVariable Long id) {
-        Flight flight = flightService.findFlightById(id);
-        return (flight != null) ? ResponseEntity.ok(flight) : ResponseEntity.notFound().build();
-    }
-    
-    
-    //add
     @PostMapping("/add")
-    public Flight addFlight(@RequestBody Flight flight) {
-        return flightService.addFlight(flight);
+    public ResponseEntity<String> addFlights(@RequestBody List<Flight> flights) {
+        for (Flight flight : flights) {
+            if (flight.getFlightDate().isBefore(LocalDate.now())) {
+                return ResponseEntity.badRequest().body("Cannot add flights for past dates.");
+            }
+        }
+
+        flightService.addFlights(flights);
+        return ResponseEntity.ok("Flights added successfully.");
     }
+
     
     //fullUpdate
     @PutMapping("/update/{id}")
-    public Flight updateFlight(@PathVariable Integer id, @RequestBody Flight updatedFlight) {
-        return flightService.updateFlight(id, updatedFlight);
+    public ResponseEntity<?> updateFlight(@PathVariable Long id, @RequestBody Flight updatedFlight) {
+        Flight existingFlight = flightService.findFlightById(id);
+        if (existingFlight == null) {
+            return ResponseEntity.status(404).body("Flight with ID " + id + " not found.");
+        }
+
+        if (updatedFlight.getFlightDate().isBefore(LocalDate.now())) {
+            return ResponseEntity.badRequest().body("Cannot update flight to a past date.");
+        }
+
+        Flight flight = flightService.updateFlight(id, updatedFlight);
+        return ResponseEntity.ok(flight);
     }
     
     //partialUpdate
     @PatchMapping("/update/{id}")
-    public ResponseEntity<Flight> updateFlightFields(
+    public ResponseEntity<?> updateFlightFields(
             @PathVariable Integer id,
             @RequestBody Map<String, Object> updates) {
         
         Flight updatedFlight = flightService.updateFlightFields(id, updates);
         
-        return (updatedFlight != null) ? ResponseEntity.ok(updatedFlight) : ResponseEntity.notFound().build();
+        return (updatedFlight != null) 
+                ? ResponseEntity.ok(updatedFlight) 
+                : ResponseEntity.status(404).body("Flight with ID " + id + " not found for update.");
     }
     
     //delete
     @DeleteMapping("/delete/{id}")
-    public String deleteFlight(@PathVariable Integer id) {
+    public ResponseEntity<String> deleteFlight(@PathVariable Long id) {
         boolean isDeleted = flightService.deleteFlight(id);
-        return isDeleted ? "Flight deleted successfully." : "Flight not found.";
+        
+        if (isDeleted) {
+            return ResponseEntity.ok("Flight deleted successfully.");
+        } else {
+            return ResponseEntity.status(404).body("Flight not found.");
+        }
     }
-    
-//    @GetMapping("/check-user")
-//    public ResponseEntity<String> checkUser(@RequestHeader("Authorization") String token) {
-//        return userServiceClient.validateToken(token);
-//    }
+   
 }

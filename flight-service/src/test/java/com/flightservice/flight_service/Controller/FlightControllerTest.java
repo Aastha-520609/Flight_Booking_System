@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Mockito.*;
@@ -39,7 +40,7 @@ class FlightControllerTest {
     @BeforeEach
     void setUp() {
         flight = new Flight();
-        flight.setId(1);
+        flight.setId((long) 1);
         flight.setAirlineName("Air India");
         flight.setFlightNumber("AI123");
         flight.setSource("DEL");
@@ -76,8 +77,8 @@ class FlightControllerTest {
     }
 
     @Test
-    void testAddFlight() throws Exception {
-        when(flightService.addFlight(any(Flight.class))).thenReturn(flight);
+    void testAddFlights() throws Exception {
+        when(flightService.addFlights((List<Flight>) any(Flight.class))).thenReturn((List<Flight>) flight);
 
         mockMvc.perform(post("/flights/add")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -88,7 +89,7 @@ class FlightControllerTest {
 
     @Test
     void testUpdateFlight() throws Exception {
-        when(flightService.updateFlight(eq(1), any(Flight.class))).thenReturn(flight);
+        when(flightService.updateFlight((long) eq(1), any(Flight.class))).thenReturn(flight);
 
         mockMvc.perform(put("/flights/update/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -118,7 +119,7 @@ class FlightControllerTest {
 
     @Test
     void testDeleteFlight() throws Exception {
-        when(flightService.deleteFlight(1)).thenReturn(true);
+        when(flightService.deleteFlight((long) 1)).thenReturn(true);
 
         mockMvc.perform(delete("/flights/delete/1"))
                 .andExpect(status().isOk())

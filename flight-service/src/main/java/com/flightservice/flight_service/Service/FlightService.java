@@ -37,12 +37,12 @@ public class FlightService {
     }
     
     //add flight by admin
-    public Flight addFlight(Flight flight) {
-        return flightRepository.save(flight);
+    public List<Flight> addFlights(List<Flight> flights) {
+        return flightRepository.saveAll(flights);
     }
     
     //update an existing flight by admin
-    public Flight updateFlight(Integer id, Flight updatedFlight) {
+    public Flight updateFlight(Long id, Flight updatedFlight) {
         Optional<Flight> existingFlightOpt = flightRepository.findById(id);
 
         if (existingFlightOpt.isPresent()) {
@@ -104,7 +104,7 @@ public class FlightService {
     }
     
     //delete flight by admin
-    public boolean deleteFlight(Integer id) {
+    public boolean deleteFlight(Long id) {
         if (flightRepository.existsById(id)) {
             flightRepository.deleteById(id);
             return true;

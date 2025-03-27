@@ -33,7 +33,7 @@ class FlightServiceTest {
     @BeforeEach
     void setUp() {
         flight = new Flight();
-        flight.setId(1);
+        flight.setId((long) 1);
         flight.setAirlineName("Air India");
         flight.setFlightNumber("AI123");
         flight.setSource("DEL");
@@ -67,11 +67,14 @@ class FlightServiceTest {
     }
 
     @Test
-    void testAddFlight() {
-        when(flightRepository.save(any(Flight.class))).thenReturn(flight);
-        Flight savedFlight = flightService.addFlight(flight);
-        assertNotNull(savedFlight);
-        assertEquals("AI123", savedFlight.getFlightNumber());
+    void testAddFlights() {
+        List<Flight> flights = Arrays.asList(flight);
+        when(flightRepository.saveAll(anyList())).thenReturn(flights);
+
+        List<Flight> savedFlights = flightService.addFlights(flights);
+        assertNotNull(savedFlights);
+        assertEquals(1, savedFlights.size());
+        assertEquals("AI123", savedFlights.get(0).getFlightNumber());
     }
 
     @Test
@@ -90,7 +93,7 @@ class FlightServiceTest {
         updatedFlight.setPrice(new BigDecimal("4500"));
         updatedFlight.setSeatsAvailable(120);
 
-        Flight result = flightService.updateFlight(1, updatedFlight);
+        Flight result = flightService.updateFlight((long) 1, updatedFlight);
         assertNotNull(result);
         assertEquals("Indigo", result.getAirlineName());
     }
@@ -115,7 +118,7 @@ class FlightServiceTest {
         when(flightRepository.existsById(1)).thenReturn(true);
         doNothing().when(flightRepository).deleteById(1);
         
-        boolean isDeleted = flightService.deleteFlight(1);
+        boolean isDeleted = flightService.deleteFlight((long) 1);
         assertTrue(isDeleted);
         verify(flightRepository, times(1)).deleteById(1);
     }

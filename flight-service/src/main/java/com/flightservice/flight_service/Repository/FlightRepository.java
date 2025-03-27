@@ -16,4 +16,8 @@ public interface FlightRepository extends JpaRepository<Flight, Integer> {
 	Flight findByFlightNumberAndFlightDate(String flightNumber, LocalDate flightDate);
 	
 	Optional<Flight> findById(Long id);
+
+	boolean existsById(Long id);
+
+	void deleteById(Long id);
 }
