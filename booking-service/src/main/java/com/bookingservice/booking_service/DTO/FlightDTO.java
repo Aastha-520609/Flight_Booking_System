@@ -14,7 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FlightDTO {
-    private Long id;
+    private Integer id;
     private String airlineName;
     private String flightNumber;
     private String source;

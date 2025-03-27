@@ -1,8 +1,5 @@
 package com.bookingservice.booking_service.DTO;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,10 +10,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BookingRequest {
-    private String name;
+	private String passengerName;
     private int age;
     private String email;
-    private String phone;
-    private int numSeats;
+    private String contactNumber;
+    private int seatsBooked; 
     private Long flightId; 
 }

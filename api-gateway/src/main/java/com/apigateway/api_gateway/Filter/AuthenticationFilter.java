@@ -51,6 +51,10 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             
             try {
                 jwtUtil.validateToken(authHeader);
+                String userRole = jwtUtil.extractRole(authHeader);
+                exchange.getRequest().mutate()
+                    .header("X-User-Role", userRole)
+                    .build();
             } catch (Exception e) {
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 return exchange.getResponse().setComplete();

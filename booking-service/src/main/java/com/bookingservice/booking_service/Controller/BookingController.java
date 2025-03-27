@@ -1,14 +1,11 @@
 package com.bookingservice.booking_service.Controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.*;
-
 import com.bookingservice.booking_service.DTO.BookingRequest;
 import com.bookingservice.booking_service.Entity.Booking;
 import com.bookingservice.booking_service.Service.BookingService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/bookings")
@@ -20,19 +17,14 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-    @PostMapping("/create")
-    @PreAuthorize("hasAuthority('USER')")
-    public ResponseEntity<Booking> createBooking(
-        @RequestBody BookingRequest request,
-        @AuthenticationPrincipal Jwt jwt
-    ) {
-        String username = jwt.getSubject();
-        System.out.println("Booking request received from: " + username);
-        System.out.println("Booking Details: " + request);
-
-        // Call service to create the booking
-        Booking booking = bookingService.createBooking(username, request);
-
-        return ResponseEntity.ok(booking);  // Return saved booking
+    @PostMapping("/book")
+    public ResponseEntity<?> bookFlight(@RequestBody BookingRequest bookingRequest) {
+        System.out.println("Received booking: " + bookingRequest);
+        try {
+            Booking bookedFlight = bookingService.bookFlight(bookingRequest);
+            return ResponseEntity.ok(bookedFlight);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 }
