@@ -15,14 +15,13 @@ public class UserController {
 
     private final UserService userService;
 
-    // ✅ Get user by username
     @GetMapping("/{username}")
     public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
         User user = userService.findByUsername(username);
         return ResponseEntity.ok(user);
     }
 
-    // ✅ Get all users
+ 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
