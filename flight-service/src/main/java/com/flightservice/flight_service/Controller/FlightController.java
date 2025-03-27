@@ -1,9 +1,9 @@
 package com.flightservice.flight_service.Controller;
 
 import com.flightservice.flight_service.Entity.Flight;
-//import com.flightservice.flight_service.Feign.UserServiceClient;
+import com.flightservice.flight_service.Exception.FlightNotFoundException;
+import com.flightservice.flight_service.Exception.InvalidFlightDateException;
 import com.flightservice.flight_service.Service.FlightService;
-
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,103 +17,85 @@ import java.util.Map;
 public class FlightController {
 
     private final FlightService flightService;
-    //private final UserServiceClient userServiceClient;
 
     public FlightController(FlightService flightService) {
         this.flightService = flightService;
-        //this.userServiceClient = userServiceClient;
     }
 
     @GetMapping("/search")
-    public ResponseEntity<?> findFlightsBySourceAndDestination(
-            @RequestParam(required = true) String source,
-            @RequestParam(required = true) String destination,
-            @RequestParam(required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate flightDate) {
-    	
-    	if (flightDate.isBefore(LocalDate.now())) {
-            return ResponseEntity.status(404).body("Past date flights are not available.");
+    public ResponseEntity<List<Flight>> findFlightsBySourceAndDestination(
+            @RequestParam String source,
+            @RequestParam String destination,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate flightDate) {
+
+        if (flightDate.isBefore(LocalDate.now())) {
+            throw new InvalidFlightDateException("Past date flights are not available.");
         }
-        
+
         List<Flight> flights = flightService.searchFlights(source, destination, flightDate);
-        
-        return flights.isEmpty() 
-                ? ResponseEntity.status(404).body("No flights found for the given source, destination, and date.") 
-                : ResponseEntity.ok(flights);
+
+        if (flights.isEmpty()) {
+            throw new FlightNotFoundException("No flights found for the given source, destination, and date.");
+        }
+
+        return ResponseEntity.ok(flights);
     }
-    
-    //added inorder to get flight in booking
+
     @GetMapping("/id/{id}")
-    public ResponseEntity<?> findFlightById(@PathVariable Long id) {
+    public ResponseEntity<Flight> findFlightById(@PathVariable Long id) {
         Flight flight = flightService.findFlightById(id);
-        return (flight != null) 
-            ? ResponseEntity.ok(flight) 
-            : ResponseEntity.status(404).body("Flight with ID " + id + " not found.");
+        return ResponseEntity.ok(flight);
     }
 
     @GetMapping("/{flightNumber}")
-    public ResponseEntity<?> findFlightByFlightNumberAndDate(
+    public ResponseEntity<Flight> findFlightByFlightNumberAndDate(
             @PathVariable String flightNumber,
-            @RequestParam(required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate flightDate) {
-        
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate flightDate) {
+
         Flight flight = flightService.searchFlightByNumber(flightNumber, flightDate);
-        
-        return (flight != null) 
-            ? ResponseEntity.ok(flight) 
-            : ResponseEntity.status(404).body("No flight found for flight number: " + flightNumber + " on date: " + flightDate);
+
+        if (flight == null) {
+            throw new FlightNotFoundException("No flight found for flight number: " + flightNumber + " on date: " + flightDate);
+        }
+
+        return ResponseEntity.ok(flight);
     }
-    
+
     @PostMapping("/add")
     public ResponseEntity<String> addFlights(@RequestBody List<Flight> flights) {
-        for (Flight flight : flights) {
-            if (flight.getFlightDate().isBefore(LocalDate.now())) {
-                return ResponseEntity.badRequest().body("Cannot add flights for past dates.");
-            }
+        boolean hasPastDates = flights.stream()
+                .anyMatch(flight -> flight.getFlightDate().isBefore(LocalDate.now()));
+
+        if (hasPastDates) {
+            throw new InvalidFlightDateException("Cannot add flights for past dates.");
         }
 
         flightService.addFlights(flights);
         return ResponseEntity.ok("Flights added successfully.");
     }
 
-    
-    //fullUpdate
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateFlight(@PathVariable Long id, @RequestBody Flight updatedFlight) {
-        Flight existingFlight = flightService.findFlightById(id);
-        if (existingFlight == null) {
-            return ResponseEntity.status(404).body("Flight with ID " + id + " not found.");
-        }
-
+    public ResponseEntity<Flight> updateFlight(@PathVariable Long id, @RequestBody Flight updatedFlight) {
         if (updatedFlight.getFlightDate().isBefore(LocalDate.now())) {
-            return ResponseEntity.badRequest().body("Cannot update flight to a past date.");
+            throw new InvalidFlightDateException("Cannot update flight to a past date.");
         }
 
         Flight flight = flightService.updateFlight(id, updatedFlight);
         return ResponseEntity.ok(flight);
     }
-    
-    //partialUpdate
+
     @PatchMapping("/update/{id}")
-    public ResponseEntity<?> updateFlightFields(
-            @PathVariable Integer id,
-            @RequestBody Map<String, Object> updates) {
-        
+    public ResponseEntity<Flight> updateFlightFields(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         Flight updatedFlight = flightService.updateFlightFields(id, updates);
-        
-        return (updatedFlight != null) 
-                ? ResponseEntity.ok(updatedFlight) 
-                : ResponseEntity.status(404).body("Flight with ID " + id + " not found for update.");
+        return ResponseEntity.ok(updatedFlight);
     }
-    
-    //delete
+
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteFlight(@PathVariable Long id) {
         boolean isDeleted = flightService.deleteFlight(id);
-        
-        if (isDeleted) {
-            return ResponseEntity.ok("Flight deleted successfully.");
-        } else {
-            return ResponseEntity.status(404).body("Flight not found.");
+        if (!isDeleted) {
+            throw new FlightNotFoundException("Flight with ID " + id + " not found.");
         }
+        return ResponseEntity.ok("Flight deleted successfully.");
     }
-   
 }

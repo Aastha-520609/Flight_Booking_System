@@ -1,6 +1,7 @@
 package com.flightservice.flight_service.Service;
 
 import com.flightservice.flight_service.Entity.Flight;
+import com.flightservice.flight_service.Exception.FlightNotFoundException;
 import com.flightservice.flight_service.Repository.FlightRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,8 @@ public class FlightService {
     }
     
     public Flight findFlightById(Long id) {
-        return flightRepository.findById(id).orElse(null);
+        return flightRepository.findById(id)
+                .orElseThrow(() -> new FlightNotFoundException("Flight with ID " + id + " not found"));
     }
     
     //add flight by admin
@@ -63,7 +65,7 @@ public class FlightService {
     }
     
     //partialUpdate
-    public Flight updateFlightFields(Integer id, Map<String, Object> updates) {
+    public Flight updateFlightFields(Long id, Map<String, Object> updates) {
         Optional<Flight> existingFlightOpt = flightRepository.findById(id);
 
         if (existingFlightOpt.isPresent()) {
