@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -33,4 +34,6 @@ public class Booking {
 
     @CreationTimestamp
     private LocalDateTime createdAt; 
+    
+    private BigDecimal totalAmount;
 }
