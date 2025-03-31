@@ -64,13 +64,20 @@ public class PaymentService {
 
     private BigDecimal fetchAmountFromBookingService(Long bookingId) {
         try {
-        	logger.info("Calling Booking Service for bookingId: {}", bookingId);
+            logger.info("Calling Booking Service for bookingId: {}", bookingId);
             BookingResponse response = bookingClient.getBooking(bookingId);
             logger.info("Received response from Booking Service: {}", response);
+
             if (response == null) {
                 logger.error("Booking API returned null for bookingId {}", bookingId);
                 throw new PaymentProcessingException("Invalid response from Booking Service");
             }
+
+            if (response.getTotalAmount() == null) {
+                logger.error("Booking Service returned null amount for bookingId {}", bookingId);
+                throw new PaymentProcessingException("Booking amount is null for bookingId " + bookingId);
+            }
+
             logger.info("Fetched booking amount: {}", response.getTotalAmount());
             return response.getTotalAmount();
         } catch (Exception e) {
@@ -78,6 +85,7 @@ public class PaymentService {
             throw new PaymentProcessingException("Failed to retrieve booking amount from Booking Service");
         }
     }
+
 
     private String createStripePaymentIntent(BigDecimal amount) {
         try {

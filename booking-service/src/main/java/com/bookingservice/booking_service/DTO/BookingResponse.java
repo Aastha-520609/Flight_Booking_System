@@ -13,6 +13,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class BookingResponse {
     private Long bookingId;
-    private BigDecimal amount;
+    private BigDecimal totalAmount;
 }
 
