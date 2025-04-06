@@ -1,6 +1,7 @@
 package com.paymentservice.payment_service.Controller;
 
 import com.paymentservice.payment_service.DTO.PaymentRequest;
+import com.paymentservice.payment_service.DTO.PaymentResponse;
 import com.paymentservice.payment_service.Entity.Payment;
 import com.paymentservice.payment_service.Service.PaymentService;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +18,8 @@ public class PaymentController {
     }
     
     @PostMapping("/process")
-    public ResponseEntity<Payment> processPayment(@RequestBody PaymentRequest paymentRequest) {
-        Payment processedPayment = paymentService.processPayment(paymentRequest.getBookingId());
+    public ResponseEntity<PaymentResponse> processPayment(@RequestBody PaymentRequest paymentRequest) {
+        PaymentResponse processedPayment = paymentService.processPayment(paymentRequest.getBookingId());
         return ResponseEntity.ok(processedPayment);
     }
 

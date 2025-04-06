@@ -21,8 +21,10 @@ public class Payment {
 
     private Long bookingId; // Reference to booking service
 
+    @Column(nullable = false)
     private BigDecimal amount;
 
+    @Column(nullable = false)
     private String paymentStatus;
 
     private String transactionId;
