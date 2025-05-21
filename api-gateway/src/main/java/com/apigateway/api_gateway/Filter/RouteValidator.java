@@ -21,14 +21,16 @@ public class RouteValidator {
     );
 
     public Predicate<ServerHttpRequest> isOpenApi =
-            request -> openApiEndpoints
-                    .stream()
-                    .anyMatch(uri -> request.getURI().getPath().startsWith(uri));
+            request -> {
+                String path = request.getURI().getPath().replaceAll("/+$", "");
+                return openApiEndpoints.stream().anyMatch(path::equals);
+            };
 
     public Predicate<ServerHttpRequest> isAdminApi =
-            request -> adminEndpoints
-                    .stream()
-                    .anyMatch(uri -> request.getURI().getPath().startsWith(uri));
+            request -> {
+                String path = request.getURI().getPath().replaceAll("/+$", "");
+                return adminEndpoints.stream().anyMatch(path::equals);
+            };
 
     public Predicate<ServerHttpRequest> isSecured =
             request -> !isOpenApi.test(request);

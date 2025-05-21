@@ -24,17 +24,20 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
-
             var request = exchange.getRequest();
             var path = request.getURI().getPath();
 
+            System.out.println("Incoming request path: " + path);
+
             // Skip open APIs
             if (validator.isOpenApi.test(request)) {
+                System.out.println("Open API - no auth required for: " + path);
                 return chain.filter(exchange);
             }
 
             // Check Authorization header
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+                System.out.println("Missing Authorization header");
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 return exchange.getResponse().setComplete();
             }
@@ -48,8 +51,14 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 jwtUtil.validateToken(token);
                 String role = jwtUtil.extractRole(token);
 
+                System.out.println("JWT Role: " + role);
+
+                boolean isAdminApi = validator.isAdminApi.test(request);
+                System.out.println("Is Admin API: " + isAdminApi);
+
                 // Restrict ADMIN-only routes
-                if (validator.isAdminApi.test(request) && !"ADMIN".equalsIgnoreCase(role)) {
+                if (isAdminApi && !"ADMIN".equalsIgnoreCase(role)) {
+                    System.out.println("Access Denied: User role '" + role + "' not authorized for " + path);
                     exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
                     return exchange.getResponse().setComplete();
                 }
@@ -60,6 +69,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                         .build();
 
             } catch (Exception e) {
+                System.out.println("Token validation failed: " + e.getMessage());
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 return exchange.getResponse().setComplete();
             }
