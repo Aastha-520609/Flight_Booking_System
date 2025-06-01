@@ -15,22 +15,25 @@ public class RouteValidator {
     );
 
     public static final List<String> adminEndpoints = List.of(
-            "/flights/add",
-            "/flights/update",
-            "/flights/delete"
-    );
+    	    "/flights/add",
+    	    "/flights/update",
+    	    "/flights/delete"
+    	);
 
     public Predicate<ServerHttpRequest> isOpenApi =
             request -> {
-                String path = request.getURI().getPath().replaceAll("/+$", "");
+            	String path = request.getURI().getPath().trim().replaceAll("/+$", "");
                 return openApiEndpoints.stream().anyMatch(path::equals);
             };
+            
+     public Predicate<ServerHttpRequest> isAdminApi =
+            	    request -> {
+            	        String path = request.getURI().getPath().trim();
+            	        return adminEndpoints.stream()
+            	                .anyMatch(path::startsWith);
+            	    };
 
-    public Predicate<ServerHttpRequest> isAdminApi =
-            request -> {
-                String path = request.getURI().getPath().replaceAll("/+$", "");
-                return adminEndpoints.stream().anyMatch(path::equals);
-            };
+   
 
     public Predicate<ServerHttpRequest> isSecured =
             request -> !isOpenApi.test(request);
