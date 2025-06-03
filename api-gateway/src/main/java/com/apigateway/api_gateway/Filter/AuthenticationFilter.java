@@ -72,7 +72,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
                 // Forward role to downstream
                 var mutatedRequest = request.mutate()
-                        .header("X-User-Role", role)
+                		.headers(httpHeaders -> httpHeaders.add("X-User-Role", role))
                         .build();
 
                 var mutatedExchange = exchange.mutate()

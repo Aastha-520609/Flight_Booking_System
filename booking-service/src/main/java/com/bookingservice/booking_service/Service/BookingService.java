@@ -2,11 +2,11 @@ package com.bookingservice.booking_service.Service;
 
 import com.bookingservice.booking_service.DTO.BookingRequest;
 import com.bookingservice.booking_service.DTO.FlightDTO;
-import com.bookingservice.booking_service.DTO.PaymentRequest;
+//import com.bookingservice.booking_service.DTO.PaymentRequest;
 import com.bookingservice.booking_service.Entity.Booking;
 import com.bookingservice.booking_service.Entity.BookingStatus;
 import com.bookingservice.booking_service.Feign.FlightServiceClient;
-import com.bookingservice.booking_service.Feign.PaymentServiceClient;
+//import com.bookingservice.booking_service.Feign.PaymentServiceClient;
 import com.bookingservice.booking_service.Repository.BookingRepository;
 
 import java.math.BigDecimal;
@@ -20,13 +20,18 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final FlightServiceClient flightServiceClient;
-    private final PaymentServiceClient paymentServiceClient;
-
-    public BookingService(BookingRepository bookingRepository, FlightServiceClient flightServiceClient, PaymentServiceClient paymentServiceClient) {
+    //private final PaymentServiceClient paymentServiceClient;
+    
+    public BookingService(BookingRepository bookingRepository, FlightServiceClient flightServiceClient) {
         this.bookingRepository = bookingRepository;
         this.flightServiceClient = flightServiceClient;
-        this.paymentServiceClient = paymentServiceClient;
     }
+
+//    public BookingService(BookingRepository bookingRepository, FlightServiceClient flightServiceClient, PaymentServiceClient paymentServiceClient) {
+//        this.bookingRepository = bookingRepository;
+//        this.flightServiceClient = flightServiceClient;
+//        this.paymentServiceClient = paymentServiceClient;
+//    }
 
     @Transactional
     public Booking bookFlight(BookingRequest bookingRequest) {
@@ -58,22 +63,27 @@ public class BookingService {
         Booking savedBooking = bookingRepository.save(newBooking);
 
         // Step 4: Update only seatsAvailable in FlightDTO
-        FlightDTO updatedFlight = new FlightDTO();
-        updatedFlight.setId(flight.getId());  // Ensure ID is set
-        updatedFlight.setAirlineName(flight.getAirlineName());
-        updatedFlight.setFlightNumber(flight.getFlightNumber());
-        updatedFlight.setSource(flight.getSource());
-        updatedFlight.setDestination(flight.getDestination());
-        updatedFlight.setFlightDate(flight.getFlightDate());
-        updatedFlight.setDepartureTime(flight.getDepartureTime());
-        updatedFlight.setArrivalTime(flight.getArrivalTime());
-        updatedFlight.setPrice(flight.getPrice());
-        updatedFlight.setSeatsAvailable(flight.getSeatsAvailable() - bookingRequest.getSeatsBooked()); 
+        try {
+           FlightDTO updatedFlight = new FlightDTO();
+           updatedFlight.setId(flight.getId());  // Ensure ID is set
+           updatedFlight.setAirlineName(flight.getAirlineName());
+           updatedFlight.setFlightNumber(flight.getFlightNumber());
+           updatedFlight.setSource(flight.getSource());
+           updatedFlight.setDestination(flight.getDestination());
+           updatedFlight.setFlightDate(flight.getFlightDate());
+           updatedFlight.setDepartureTime(flight.getDepartureTime());
+           updatedFlight.setArrivalTime(flight.getArrivalTime());
+           updatedFlight.setPrice(flight.getPrice());
+           updatedFlight.setSeatsAvailable(flight.getSeatsAvailable() - bookingRequest.getSeatsBooked()); 
 
-        flightServiceClient.updateFlight(flight.getId(), updatedFlight);
+           flightServiceClient.updateFlight(flight.getId(), updatedFlight);
+        }catch(Exception e) {
+        	 bookingRepository.deleteById(savedBooking.getId());
+             throw new RuntimeException("Failed to update flight seats. Booking cancelled.", e);
+        }
         
-        PaymentRequest paymentRequest = new PaymentRequest(savedBooking.getId(), totalPrice);
-        paymentServiceClient.processPayment(paymentRequest);
+//        PaymentRequest paymentRequest = new PaymentRequest(savedBooking.getId(), totalPrice);
+//        paymentServiceClient.processPayment(paymentRequest);
 
         return savedBooking;
     }

@@ -1,4 +1,4 @@
-package com.flightservice.flight_service.Security;
+package com.bookingservice.booking_service.Security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +11,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -22,21 +21,20 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/flights/add", "/flights/delete/**")
-                    .access(adminOnlyAccessManager())
+                .requestMatchers("/bookings/**").access(userOnlyAccessManager())
                 .anyRequest().permitAll()
             );
 
         return http.build();
     }
 
-    private AuthorizationManager<RequestAuthorizationContext> adminOnlyAccessManager() {
+    private AuthorizationManager<RequestAuthorizationContext> userOnlyAccessManager() {
         return (authenticationSupplier, context) -> {
             HttpServletRequest request = context.getRequest();
             String role = request.getHeader("X-User-Role");
-            System.out.println("Received X-User-Role in flight-service: " + role);
-            boolean isAdmin = role != null && role.equalsIgnoreCase("ADMIN");
-            return new AuthorizationDecision(isAdmin);
+            System.out.println("Received X-User-Role in booking-service: " + role);
+            boolean isUser = role != null && role.equalsIgnoreCase("USER");
+            return new AuthorizationDecision(isUser);
         };
     }
 }

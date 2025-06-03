@@ -23,7 +23,10 @@ public class RouteValidator {
     public static final List<String> userEndpoints = List.of(
             "/flights/search",
             "/flights/id",
-            "/flights" 
+            "/flights" ,
+            "/flights/update",
+            "/bookings/book",
+            "/bookings"
     );
 
     public Predicate<ServerHttpRequest> isOpenApi =
