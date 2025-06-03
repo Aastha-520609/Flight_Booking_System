@@ -1,7 +1,6 @@
 package com.apigateway.api_gateway.Filter;
 
 import com.apigateway.api_gateway.Util.JwtUtil;
-
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
@@ -58,26 +57,20 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             try {
                 jwtUtil.validateToken(token);
                 String role = jwtUtil.extractRole(token);
-
                 System.out.println("JWT Role: " + role);
 
                 boolean isAdminApi = validator.isAdminApi.test(request);
-                System.out.println("Is Admin API: " + isAdminApi);
+                boolean isUserApi = validator.isUserApi.test(request);
 
                 if (isAdminApi && !"ADMIN".equalsIgnoreCase(role)) {
-                    System.out.println("Access Denied: User role '" + role + "' not authorized for " + path);
-
-                    exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-                    exchange.getResponse().getHeaders().add("Content-Type", "application/json");
-
-                    String responseBody = "{\"message\":\"Access Denied: Only admins can access this route.\"}";
-                    byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
-                    var buffer = exchange.getResponse().bufferFactory().wrap(bytes);
-
-                    return exchange.getResponse().writeWith(Mono.just(buffer));
+                    return denyAccess(exchange, "Access Denied: Only admins can access this route.");
                 }
 
+                if (isUserApi && !(role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("USER"))) {
+                    return denyAccess(exchange, "Access Denied: Only user or admin roles allowed.");
+                }
 
+                // Forward role to downstream
                 var mutatedRequest = request.mutate()
                         .header("X-User-Role", role)
                         .build();
@@ -94,6 +87,18 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 return exchange.getResponse().setComplete();
             }
         };
+    }
+
+    private Mono<Void> denyAccess(org.springframework.web.server.ServerWebExchange exchange, String message) {
+        System.out.println(message);
+        exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+        exchange.getResponse().getHeaders().add("Content-Type", "application/json");
+
+        String responseBody = "{\"message\":\"" + message + "\"}";
+        byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
+        var buffer = exchange.getResponse().bufferFactory().wrap(bytes);
+
+        return exchange.getResponse().writeWith(Mono.just(buffer));
     }
 
     public static class Config {}
